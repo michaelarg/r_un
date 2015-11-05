@@ -1,0 +1,58 @@
+library(xlsx)
+library(ggplot2)
+
+mydata <- read.xlsx("material_footprint.xlsx",1)
+
+ png(filename = "materialfootprint.png",
+     width = 2400, height = 2200, units = "px", pointsize = 12, 
+     res=300, bg = "white")
+
+
+ ggplot(mydata, aes(factor(mydata$Year), mydata$Data, fill = mydata$Indicator.name.)) + 
+  
+   
+   geom_hline(yintercept=0, size=.3,colour="grey")+
+   geom_hline(yintercept=1, size=.3,colour="grey")+
+   geom_hline(yintercept=2, size=.3,colour="grey")+
+   geom_hline(yintercept=3, size=.3,colour="grey")+
+   geom_hline(yintercept=0.5, size=.3,colour="grey")+
+   geom_hline(yintercept=1.5, size=.3,colour="grey")+
+   geom_hline(yintercept=2.5, size=.3,colour="grey")+
+   geom_hline(yintercept=3.5, size=.3,colour="grey")+
+  
+   geom_bar(stat="identity", position = "dodge") +
+   
+    theme(
+      
+
+      
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    
+    panel.background = element_blank(),
+    axis.text.x = element_text(colour="black",size=10), axis.text.y = element_text(colour="black",size=10),
+    
+    axis.line = element_line(color = 'grey'),
+    axis.ticks =element_line(colour = "grey",size=.3),
+    axis.title.y=element_text(vjust=0.99)
+  )+
+
+  xlab("")+
+  ylab("Thousand tons per capita")+
+
+
+  scale_y_continuous(limits=c(0,3.55),breaks=c(0,0.5,1,1.5,2,2.5,3,3.5)) +
+   
+   scale_x_discrete(expand = c(0,0))+
+  
+  coord_cartesian(ylim = c(0, 3.55)) +
+
+  
+  guides(fill=guide_legend(title="Material Footprint Category"))+
+    
+   scale_fill_discrete(labels=c("Agriculture","Construction","Manufacturing","Mining and Energy","Services","Transport","Footprint total by sector"))
+
+
+ 
+ 
+dev.off()
