@@ -2,7 +2,7 @@ library(RODBC)
 stw<-odbcConnect("STW")
 
 #This is a general equiplot script --- currently setup for quintiles but easily customisable
-
+#test
 #Follow the numbers for customisation:
 
 #The code does a nice job at automating the majority of things, the only problem that
