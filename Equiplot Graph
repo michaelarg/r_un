@@ -1,0 +1,113 @@
+library(RODBC)
+stw<-odbcConnect("STW")
+
+#This is a general equiplot script --- currently setup for quintiles but easily customisable
+
+#Follow the numbers for customisation:
+
+#The code does a nice job at automating the majority of things, the only problem that
+#might occur is with different lengths of countries/number of countries will change the 
+#spacing of the output so the user might have to play around with margins and to achieve
+#the desired design, the code does not use a traditional way of plotting but brings together
+#different pieces of plot and other tools to achieve the final outcome.
+
+# 1) Here the user will need to have Indicator ID and Unit ID values of the data they want to plot
+q1 <- sqlQuery(stw, paste("SELECT dbo.cvt_CC_Numeric_to_Alphabetic (2, Control_code) as CodeName,
+                          *  from localVW_final_report_MAIN_forR 
+                          WHERE Indicator_id =3808 AND Unit_Id = 664"))
+
+q2 <- sqlQuery(stw, paste("SELECT dbo.cvt_CC_Numeric_to_Alphabetic (2, Control_code) as CodeName,
+                          *  from localVW_final_report_MAIN_forR 
+                          WHERE Indicator_id =3809 AND Unit_Id = 664"))
+
+q3 <- sqlQuery(stw, paste("SELECT dbo.cvt_CC_Numeric_to_Alphabetic (2, Control_code) as CodeName,
+                          *  from localVW_final_report_MAIN_forR 
+                          WHERE Indicator_id =3810 AND Unit_Id = 664"))
+
+q4 <- sqlQuery(stw, paste("SELECT dbo.cvt_CC_Numeric_to_Alphabetic (2, Control_code) as CodeName,
+                          *  from localVW_final_report_MAIN_forR 
+                          WHERE Indicator_id =3811 AND Unit_Id = 664"))
+
+q5 <- sqlQuery(stw, paste("SELECT dbo.cvt_CC_Numeric_to_Alphabetic (2, Control_code) as CodeName,
+                          *  from localVW_final_report_MAIN_forR 
+                          WHERE Indicator_id =3812 AND Unit_Id = 664"))
+par(xpd=FALSE)
+
+#The filename below can be adjusted and also the height of the exported file
+png(filename ="equiplot.png", width = 2400, height = 3000, units = "px", pointsize = 12, res=300, bg = "white")
+
+#2) Adjust the line below accordingly 
+x.df<-data.frame(rbind(q1,q2,q3,q4,q5))
+master<-x.df
+
+# 3) Enter the county or countries in desired order, Check you are spelling it exactly as it is in database
+countries<-c("Afghanistan","Armenia","Azerbaijan","Bangladesh","Bhutan","Cambodia","Georgia","Indonesia","Kazakhstan",
+             "Kiribati","Kyrgyzstan","Lao PDR", "Maldives" , "Marshall Islands" , "Mongolia" , "Myanmar", "Nepal","Pakistan", "Samoa",
+             "Sri Lanka" , "Tajikistan", "Thailand" , "Timor-Leste" , "Turkey", "Tuvalu", "Uzbekistan", "Vanuatu", "Viet Nam"  )
+
+#4) Enter the colours you want to use, if you have X data points on one line, you will need X colours(if you want changing colours)
+colours<-c("#0D47A1","#1565C0","#1E88E5","#42A5F5","#BBDEFB") 
+
+#5) enter years you want to examine, the years MUST correspond to the same position as the respective country in the coutries vector
+years<-c(2011,2010,2006,2011,2010,2010,2013,2012,2011,
+         2009,2012,2012,2009,2007,2010,2010,2011,2013,2009,
+         2007,2012,2012,2010,2008,2007,2006,2013,2011)
+
+for(i in 1:length(countries)){
+  assign(paste("dc", i, sep = ""), master$DATA_VALUE[which(master$Area==countries[i] & master$Year==years[i])])  
+}
+
+#6) This line below is the only other manual input the user MUST make, number of entries here should match the number of countries 
+x=list(dc1,dc2,dc3,dc4,dc5,dc6,dc7,dc8,dc9,dc10,dc11,dc12,dc13,dc14,dc15,dc16,dc17,dc18,dc19,dc20,dc21,dc22,dc23,dc24,dc25,dc26,dc27,dc28)
+
+countrieslabels<-paste(countries,' (',sep="")
+countrieslabels<-paste(countrieslabels,years,sep="")
+countrieslabels<-paste(countrieslabels,")",sep='')
+
+#Note: I thought the equiplot looks more appealing without the top and right borders
+#R doesn't have a specific way to turn off specific borders, so I turned the borders 
+#off in both plot functions and used to the x axis and y axis (note ylim and xlim are
+#different values to bring these too axis closer together). There is a slight gap in
+#between the two axis that has been gapped by using the segments function below
+#so note that the segment line might move around if margins are being changed, but only 
+#slight adjustments will be needed ---- so check xlim and ylim of both plot functions
+#the respective values should be equal between both plots and segments value
+
+#Plot just to get vertical grid lines behind EVERYTHING
+plot(0,type='n',xlim = c(-10,100),
+     ylim=c(1.3,length(countries)), panel.first=segments(c(25,50,75,100),c(0,0,0,0),c(25,50,75,100),c(28,28,28,28),col="grey88"),yaxt='n', xaxt='n',ylab='',xlab = '',axes=F,tck=0)
+
+par(new=TRUE)
+
+#Actual plotting of the points
+for(i in 1:length(x)) {
+  plot(x[[i]],  rep(length(countries)+1-i,length(x[[i]])) , xlim = c(-10,100), tck=0,
+       ylim=c(.5,length(countries)),yaxt='n', xaxt='n',ylab='',xlab = '', 
+       panel.first = c(segments(min(x[[i]]),length(countries)+1-i ,  max(x[[i]]) ,length(countries)+1-i)),
+       
+       type="p", pch=16, cex=1.4, frame.plot=FALSE,
+       col=ifelse(x[[i]][1:length(x[[i]])], colours , "red")) #only would appear red if there is an error
+  par(new=TRUE)
+}
+
+#The following just adds various items to the plot 
+plot(0, xlim = c(-10,100), yaxs="r",ylim=c(.5,length(countries)),yaxt='n', xaxt='n',ylab='', type='n',xlab='',axes=F,tck=0)
+segments(0,1,0,0,col='black')
+
+#The x axis label is automatic but if you wanted to write it manually the line below is where you would do it
+title(xlab=master$Unit[1],line = 1,adj=.55)
+
+par(mar=c(6, 8,12, 1), xpd=TRUE) #margin format (bottom,left,top,right)
+
+par(las=2)
+par(las=1)
+
+axis(side=2,mgp = c(3, 0.5, -.199),tck=-.0099,cex.axis=.8,at=c(length(countries):1) ,labels=c(countrieslabels))
+axis(side=1 ,mgp = c(3, 0.5, 0),tck=-.0099,cex.axis=.8, at=c(seq(0,max(master$DATA_VALUE+5),25))) #currently the ticks are from 0 to 150 seperated by 10
+
+#7) Make sure to change the legend labels below if need be
+legend("bottom",inset=-.11, legend=c("Q1 (Poorest)","Q2","Q3","Q4","Q5 (Richest)"),
+       pch=16, col=colours,bty='n',title="", pt.cex=1.5, cex=.90 ,x.intersp=0.8,
+       horiz=TRUE,text.width=c(8,1,-10,24,12))
+
+dev.off() #if you wanted to plot it in r studio you have to delete dev.off as this is only used when exportin
