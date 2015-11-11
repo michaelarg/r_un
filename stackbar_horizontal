@@ -1,0 +1,81 @@
+library(xlsx)
+library(ggplot2)
+library(dplyr)
+
+
+x <- data.frame(read.xlsx("childmarriage.xlsx",1))
+
+png(filename="mad111.png", width = 2400, height = 2600, units = "px", pointsize = 12, res=300, bg = "white")
+
+
+
+x$Value = round(x$Value,0)
+
+
+
+
+levels(x$Country)<-rev(levels(x$Country))
+x$Reference.Year=rev(x$Reference.Year)
+x$Value = rev(x$Value)
+
+
+for(i in 0:31) {
+  
+  tmp=x[i*1+1+i,3]
+  x[i*1+1+i,3]=x[i*1+2+i,3]
+  x[i*1+2+i,3] =tmp
+  
+}
+# 
+# countrieslabels<-paste(x$Country,' (',sep="")
+# countrieslabels<-paste(countrieslabels,x$Reference.Year,sep="")
+# x$Country<-paste(countrieslabels,")",sep='')
+
+ggplot(data = x, aes(x=(x$Country),y=(x$Value), fill=(x$Indicator))) + 
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  guides(fill=guide_legend(title=NULL))+
+  xlab("")+
+  ylab("")+
+  scale_fill_manual(values = c("#8EC43F", "#4B8CCA"))+
+  
+  
+  geom_segment(aes(x = 0, y = -0.1, xend = 32.45, yend =-0.1))+
+   
+
+ # scale_x_continuous(limits=c(0,32.45))+
+  
+  scale_y_continuous(limits=c(-0.13,100.2),breaks=c(0,25,50,75,100),expand = c(0,0)) +
+
+  #guides(shape=guide_legend(override.aes=list(size=20)))+
+  
+  
+  theme( # remove the vertical grid lines
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    #  panel.border = element_rect(fill=NA,color="black", size=0.5, 
+    #  linetype="solid"),
+    
+    legend.position = c(0.89, 0.6),
+    legend.text=element_text(size=10),
+    
+    #guides(colour = guide_legend(override.aes = list(size=10))),
+    
+    
+    #legend.margin=unit(-1.2, "cm"),
+    
+    #panel.grid.major.y = element_line( size=.1, color="black" ) ,
+    
+    # panel.background = element_rect(colour = "black"),
+    panel.background = element_blank(),
+    axis.text.x = element_text(colour="black",size=12), axis.text.y = element_text(colour="black",size=12),
+
+    axis.line = element_line(color = 'black'),
+    axis.ticks =element_line(colour = "black"),
+    
+    axis.line.y=element_blank()
+    
+  )
+  
+
+dev.off()
